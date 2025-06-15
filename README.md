@@ -1,4 +1,4 @@
-# CV Builder
+# [CV Builder](https://cv-builder-alpha-jet.vercel.app/)
 
 A simple tool to build your resume fast with one clean style. Just fill in your info and download your CV hassle-free!
 
