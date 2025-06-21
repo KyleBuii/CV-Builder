@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import Page from "./Page";
+import './Page.scss';
 import Sidebar from "./Sidebar";
 
 const App = () => {
@@ -54,57 +55,47 @@ const App = () => {
         'Conversational Proficiency in Vietnamese',
     ]);
 
-    const createSetterArray = (setter, currentValue) => (newItem) => {
-        setter([...currentValue, newItem]);
+    const values = {
+        name: name,
+        location: location,
+        phone: phone,
+        email: email,
+        github: github,
+        school: school,
+        schoolLocation: schoolLocation,
+        degree: degree,
+        major: major,
+        achievements: achievements,
+        courses: courses,
+        experiences: experiences,
+        projects: projects,
+        technicalSkills: technicalSkills,
+        languages: languages,
     };
-    const createSetterObject = (setter, currentValue) => (newItem) => {
-        setter({ ...currentValue, ...newItem });
-    };
-
-    const handleSetAchievements = createSetterArray(setAchievements, achievements);
-    const handleSetCourses = createSetterArray(setCourses, courses);
-    const handleSetExperiences = createSetterObject(setExperiences, experiences);
-    const handleSetProjects = createSetterObject(setProjects, projects);
-    const handleSetTechnicalSkills = createSetterArray(setTechnicalSkills, technicalSkills);
-    const handleSetLanguages = createSetterArray(setLanguages, languages);
-
     const setters = {
-        name: setName,
-        location: setLocation,
-        phone: setPhone,
-        email: setEmail,
-        github: setGithub,
-        school: setSchool,
-        schoolLocation: setSchoolLocation,
-        degree: setDegree,
-        major: setMajor,
-        achievements: handleSetAchievements,
-        courses: handleSetCourses,
-        experiences: handleSetExperiences,
-        projects: handleSetProjects,
-        technicalSkills: handleSetTechnicalSkills,
-        languages: handleSetLanguages,
+        setName: setName,
+        setLocation: setLocation,
+        setPhone: setPhone,
+        setEmail: setEmail,
+        setGithub: setGithub,
+        setSchool: setSchool,
+        setSchoolLocation: setSchoolLocation,
+        setDegree: setDegree,
+        setMajor: setMajor,
+        setAchievements: setAchievements,
+        setCourses: setCourses,
+        setExperiences: setExperiences,
+        setProjects: setProjects,
+        setTechnicalSkills: setTechnicalSkills,
+        setLanguages: setLanguages,
     };
 
     return (
         <div>
-            <Sidebar setters={setters}/>
-            <Page
-                name={name}
-                location={location}
-                phone={phone}
-                email={email}
-                github={github}
-                school={school}
-                schoolLocation={schoolLocation}
-                degree={degree}
-                major={major}
-                achievements={achievements}
-                courses={courses}
-                experiences={experiences}
-                projects={projects}
-                technicalSkills={technicalSkills}
-                languages={languages}/>
+            <Sidebar values={values}
+                setters={setters}/>
+            <Page values={values}
+                setters={setters}/>
         </div>
     );
 };
