@@ -2,7 +2,9 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import React, { memo, useEffect, useRef, useState } from 'react';
 import { FaDownload } from 'react-icons/fa';
-import { FaTrashCan } from 'react-icons/fa6';
+import { FaPencil, FaTrashCan } from 'react-icons/fa6';
+
+let clickedElement = <></>;
 
 const Page = ({ values, setters }) => {
     const [pageLoaded, setPageLoaded] = useState(false);
@@ -76,14 +78,64 @@ const Page = ({ values, setters }) => {
         const elementDataSubName = event.target.getAttribute('data-sub-name');
         const elementDataIndex = event.target.getAttribute('data-index');
         const elementDataIndexItem = event.target.getAttribute('data-index-item');
+        let value = values[elementDataName];
+
+        clickedElement = event.target;
 
         if (editMode) {
-            event.target.innerText = '';
+            const elementInput = document.getElementById('page-floating-input');
+            const rect = event.target.getBoundingClientRect();
+            const style = {
+                x: rect.left + window.scrollX,
+                y: rect.top + window.scrollY,
+                width: rect.width,
+                height: rect.height,
+            };
+
+            switch (elementDataName) {
+                case 'degree':
+                case 'experiences':
+                case 'projects': {
+                    const objectKey = Object.keys(value)[elementDataIndex];
+
+                    switch (elementDataSubName) {
+                        case 'name': {
+                            value = objectKey;
+                            break;
+                        };
+                        case 'information': {
+                            value = value[objectKey].information[elementDataIndexItem];
+                            break;
+                        };
+                        default: {
+                            value = value[objectKey][elementDataSubName];
+                            break;
+                        };
+                    };
+                    break;
+                };
+                case 'achievements':
+                case 'courses':
+                case 'technicalSkills':
+                case 'languages': {
+                    value = value[elementDataSubName];
+                    break;
+                };
+                default: { break; };
+            };
+
+            elementInput.value = value;
+
+            elementInput.style.display = 'block';
+            elementInput.style.transform = `translate(${style.x}px, ${style.y}px)`;
+            elementInput.style.width = `${style.width}px`;
+            elementInput.style.height = `${style.height}px`;
+            elementInput.focus();
         };
 
         if (deleteMode) {
             const setter = setters[`set${capitalizedDataName}`];
-            const value = values[elementDataName];
+
             switch (elementDataName) {
                 case 'degree':
                 case 'experiences':
@@ -152,6 +204,96 @@ const Page = ({ values, setters }) => {
         };
     };
 
+    const handleInputEditKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            handleInputBlur();
+        };
+    };
+
+    const handleInputBlur = () => {
+        const elementInput = document.getElementById('page-floating-input');
+        elementInput.style.display = 'none';
+        
+        const elementDataName = clickedElement.getAttribute('data-name');
+        const elementDataSubName = clickedElement.getAttribute('data-sub-name');
+        const elementDataIndex = clickedElement.getAttribute('data-index');
+        const elementDataIndexItem = clickedElement.getAttribute('data-index-item');
+
+        const elementInputValue = elementInput.value;
+        const currentValue = values[elementDataName];
+
+        if (currentValue === elementInputValue) return;
+
+        const capitalizedDataName = `${elementDataName.charAt(0).toUpperCase()}${elementDataName.slice(1)}`;
+        const setter = setters[`set${capitalizedDataName}`];
+
+        switch (elementDataName) {
+            case 'degree':
+            case 'experiences':
+            case 'projects': {
+                const newObject = { ...currentValue };
+                const objectKey = Object.keys(newObject)[elementDataIndex];
+
+                switch (elementDataSubName) {
+                    case 'name': {
+                        const copyObject = { ...newObject[objectKey] };
+
+                        switch (elementDataName) {
+                            case 'degree':
+                                setter({ [elementInputValue]: copyObject });
+                                break;
+                            case 'experiences':
+                            case 'projects':
+                                delete newObject[objectKey];
+                                setter({ ...newObject, [elementInputValue]: copyObject });
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    };
+                    case 'information': {
+                        const newInfo = [...newObject[objectKey].information];
+                        newInfo[elementDataIndexItem] = elementInputValue;
+
+                        setter({
+                            ...newObject,
+                            [objectKey]: {
+                                ...newObject[objectKey],
+                                information: newInfo,
+                            },
+                        });
+                        break;
+                    };
+                    default: {
+                        setter({
+                            ...newObject,
+                            [objectKey]: {
+                                ...newObject[objectKey],
+                                [elementDataSubName]: elementInputValue,
+                            },
+                        });
+                        break;
+                    };
+                };
+                break;
+            };
+            case 'achievements':
+            case 'courses':
+            case 'technicalSkills':
+            case 'languages': {
+                const newArray = [...currentValue];
+                newArray[elementDataSubName] = elementInputValue;
+                setter(newArray);
+                break;
+            };
+            default: {
+                setter(elementInputValue);
+                break;
+            };
+        };
+    };
+
     return (
         <div>
             <section className='floating-buttons'>
@@ -159,12 +301,20 @@ const Page = ({ values, setters }) => {
                 <button onClick={() => handleDownload()}>
                     <FaDownload/>
                 </button>
+                <button id='resume-button-edit'
+                    style={{ backgroundColor: (editMode) ? 'yellow' : '' }}
+                    onClick={() => handleStateChange('edit', editMode, setEditMode)}>
+                    <FaPencil/>
+                </button>
                 <button id='resume-button-delete'
                     style={{ backgroundColor: (deleteMode) ? 'red' : '' }}
                     onClick={() => handleStateChange('delete', deleteMode, setDeleteMode)}>
                     <FaTrashCan/>
                 </button>
             </section>
+            <input id='page-floating-input'
+                onKeyDown={handleInputEditKeyDown}
+                onBlur={handleInputBlur}/>
             <section className='resume'
                 ref={refPrint}
                 onClick={(event) => handleResumeClick(event)}>
